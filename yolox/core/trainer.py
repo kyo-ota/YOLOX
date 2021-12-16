@@ -166,6 +166,18 @@ class Trainer:
             self.ema_model = ModelEMA(model, 0.9998)
             self.ema_model.updates = self.max_iter * self.start_epoch
 
+
+        # ----------------------------------------------------------------------
+        # Print trainable parameters count
+        _total_params = sum(p.numel() for p in model.parameters())
+        _trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        _non_trainable_params = _total_params - _trainable_params
+        print(f"Total parameters: {_total_params}")
+        print(f"Trainable parameters: {_trainable_params}")
+        print(f"Non-trainable parameters: {_non_trainable_params}")
+        # ----------------------------------------------------------------------
+
+
         self.model = model
         self.model.train()
 
@@ -307,6 +319,16 @@ class Trainer:
             self.tblogger.add_scalar("val/COCOAP50", ap50, self.epoch + 1)
             self.tblogger.add_scalar("val/COCOAP50_95", ap50_95, self.epoch + 1)
             logger.info("\n" + summary)
+
+        # Log train loss
+        loss_meter = self.meter.get_filtered_meter("loss")
+        _losses = ['total_loss', 'iou_loss', 'conf_loss', 'cls_loss']
+        for l in _losses:
+            self.tblogger.add_scalar(l, loss_meter[l].latest, self.epoch + 1)
+
+        # Log lr
+        self.tblogger.add_scalar('lr', self.meter["lr"].latest, self.epoch + 1)
+
         synchronize()
 
         self.save_ckpt("last_epoch", ap50_95 > self.best_ap)

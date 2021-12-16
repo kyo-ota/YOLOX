@@ -243,7 +243,7 @@ class Exp(BaseExp):
         valdataset = COCODataset(
             data_dir=self.data_dir,
             json_file=self.val_ann if not testdev else "image_info_test-dev2017.json",
-            name="val2017" if not testdev else "test2017",
+            name="images_val" if not testdev else "images_test",
             img_size=self.test_size,
             preproc=ValTransform(legacy=legacy),
         )
